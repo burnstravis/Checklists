@@ -9,6 +9,9 @@ import UIKit
 
 class ChecklistViewController: UITableViewController,ItemDetailViewControllerDelegate {
     
+    //checklist
+    var checklist: Checklist!
+    
     //cancel checklistitem
     func itemDetailViewControllerDidCancel(_ controller: ItemDetailViewController) {
         navigationController?.popViewController(animated: true)
@@ -41,15 +44,10 @@ class ChecklistViewController: UITableViewController,ItemDetailViewControllerDel
 
     }
         
-    //checklist
-    var checklist: Checklist!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.largeTitleDisplayMode = .never
-        
         title = checklist.name
-        
     }
     
     //number of items(rows) in checklist
@@ -108,7 +106,8 @@ class ChecklistViewController: UITableViewController,ItemDetailViewControllerDel
         with item: Checklistitem
     ){
         let label = cell.viewWithTag(1000) as! UILabel
-        label.text = item.text
+        //label.text = item.text
+        label.text = "\(item.itemID): \(item.text)"
     }
     
     
@@ -129,20 +128,16 @@ class ChecklistViewController: UITableViewController,ItemDetailViewControllerDel
     //prepares other view controller
     override func prepare(
         for segue: UIStoryboardSegue,
-        sender: Any?
-        
-        //changes titles
-    ){if segue.identifier == "AddItem" {
-        // 2
+        sender: Any?)
+    
+    {if segue.identifier == "AddItem" {
         let controller = segue.destination as! ItemDetailViewController
-        // 3
         controller.delegate = self
     }
         else if segue.identifier == "EditItem" {
         let controller = segue.destination as! ItemDetailViewController
         controller.delegate = self
             
-            //set delegate to self
             if let indexPath = tableView.indexPath(
             for: sender as! UITableViewCell) {
             controller.itemToEdit = checklist.items[indexPath.row]

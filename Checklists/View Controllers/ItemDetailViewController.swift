@@ -33,6 +33,9 @@ class ItemDetailViewController: UITableViewController, UITextFieldDelegate {
     //outlet of item textfield
     @IBOutlet weak var textField: UITextField!
     
+    @IBOutlet weak var shouldRemindSwitch: UISwitch!
+    @IBOutlet weak var datePicker: UIDatePicker!
+    
     //delegate
     weak var delegate: ItemDetailViewControllerDelegate?
     
@@ -51,6 +54,8 @@ class ItemDetailViewController: UITableViewController, UITextFieldDelegate {
             
             textField.text = itemToEdit.text
             doneBarButton.isEnabled = true
+            shouldRemindSwitch.isOn = itemToEdit.shouldRemind
+            datePicker.date = itemToEdit.dueDate
         }
     }
     
@@ -61,16 +66,36 @@ class ItemDetailViewController: UITableViewController, UITextFieldDelegate {
     
     //done button
     @IBAction func done() {
-      if let item = itemToEdit {
-        item.text = textField.text!
-        delegate?.itemDetailViewController(
-    self,
-          didFinishEditing: item)
-      } else {
-        let item = Checklistitem()
-        item.text = textField.text!
-        delegate?.itemDetailViewController(self, didFinishAdding: item)
-    } }
+        if let item = itemToEdit {
+            item.text = textField.text!
+            item.shouldRemind = shouldRemindSwitch.isOn
+            item.dueDate = datePicker.date
+            item.scheduleNotification()
+            delegate?.itemDetailViewController(
+                self,
+                didFinishEditing: item)
+        }
+        else {
+            
+            let item = Checklistitem()
+            item.text = textField.text!
+            item.shouldRemind = shouldRemindSwitch.isOn
+            item.dueDate = datePicker.date
+            item.scheduleNotification()
+            delegate?.itemDetailViewController(self, didFinishAdding: item)
+        }
+    }
+    
+    @IBAction func shouldRemindToggled(_ switchControl: UISwitch) {
+      textField.resignFirstResponder()
+        if switchControl.isOn {
+            let center = UNUserNotificationCenter.current()
+            center.requestAuthorization(options: [.alert, .sound]) {_, _
+                in
+                //nothing
+            }
+        }
+    }
     
     //disallows user to select the text in row, forces user to use edit button
     override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {

@@ -22,26 +22,39 @@ protocol ListDetailViewControllerDelegate: AnyObject {
      )
    }
 
+    
 
-   class ListDetailViewController: UITableViewController, UITextFieldDelegate {
+
+   class ListDetailViewController: UITableViewController, UITextFieldDelegate, IconPickerViewControllerDelegate {
+       
+       
        
        //outlet textfield
        @IBOutlet var textField: UITextField!
        
        //outlet doneButton
        @IBOutlet var doneBarButton: UIBarButtonItem!
+       
+       //outlet iconimage
+       @IBOutlet weak var iconImage: UIImageView!
+       
+       //chosen icon name
+       var iconName = "Folder"
+       
        weak var delegate: ListDetailViewControllerDelegate?
        var checklistToEdit: Checklist?
        
        override func viewDidLoad() {
            super.viewDidLoad()
            
-           //update title, text and done button
+           //update title, text and done button, icon name, icon image
            if let checklist = checklistToEdit {
                title = "Edit Checklist"
                textField.text = checklist.name
                doneBarButton.isEnabled = true
+               iconName = checklist.iconName
            }
+           iconImage.image = UIImage(named: iconName)
        }
 
        //Brings keyboard on screen automatically
@@ -60,23 +73,20 @@ protocol ListDetailViewControllerDelegate: AnyObject {
        @IBAction func done() {
            if let checklist = checklistToEdit {
                checklist.name = textField.text!
-               delegate?.listDetailViewController(
-                self,
-                didFinishEditing: checklist)
+               checklist.iconName = iconName
+               delegate?.listDetailViewController(self,didFinishEditing: checklist)
            } else {
                let checklist = Checklist(name: textField.text!)
-               delegate?.listDetailViewController(
-                self,
-                didFinishAdding: checklist)
+               checklist.iconName = iconName
+               delegate?.listDetailViewController(self,didFinishAdding: checklist)
            }
        }
        
-       //user cannot edit textfield of cell
+       //user cannot edit textfield of cell or icon
        override func tableView(
          _ tableView: UITableView,
-         willSelectRowAt indexPath: IndexPath
-       ) -> IndexPath? {
-       return nil
+         willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+         return indexPath.section == 1 ? indexPath : nil
        }
        
        
@@ -88,9 +98,7 @@ protocol ListDetailViewControllerDelegate: AnyObject {
        ) -> Bool {
            let oldText = textField.text!
            let stringRange = Range(range, in: oldText)!
-           let newText = oldText.replacingCharacters(
-            in: stringRange,
-            with: string)
+           let newText = oldText.replacingCharacters(in: stringRange, with: string)
            doneBarButton.isEnabled = !newText.isEmpty
            return true
        }
@@ -102,6 +110,23 @@ protocol ListDetailViewControllerDelegate: AnyObject {
            doneBarButton.isEnabled = false
            return true
            
+       }
+       
+       //puts name of chosen icon into iconName variable, updates image
+       func iconPicker(_ picker: IconPickerViewController, didPick iconName: String) {
+         
+         self.iconName = iconName
+         iconImage.image = UIImage(named: iconName)
+         navigationController?.popViewController(animated: true)
+     }
+       
+       //prepare segue with identifier
+       override func prepare(for segue: UIStoryboardSegue, sender: Any?)
+       {
+           if segue.identifier == "PickIcon" {
+           let controller = segue.destination as!IconPickerViewController
+           controller.delegate = self
+         }
        }
        
    }
